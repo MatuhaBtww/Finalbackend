@@ -14,6 +14,8 @@ class Service(models.Model):
 
     class Meta:
         ordering = ("service_name",)
+        verbose_name = "услуга"
+        verbose_name_plural = "услуги"
 
     def __str__(self) -> str:
         return self.service_name
@@ -27,6 +29,8 @@ class Status(models.Model):
 
     class Meta:
         ordering = ("status_group", "status_name")
+        verbose_name = "статус"
+        verbose_name_plural = "статусы"
 
     def __str__(self) -> str:
         return self.status_name
@@ -34,13 +38,13 @@ class Status(models.Model):
 
 class MasterSchedule(models.Model):
     class Weekday(models.IntegerChoices):
-        MONDAY = 1, "Monday"
-        TUESDAY = 2, "Tuesday"
-        WEDNESDAY = 3, "Wednesday"
-        THURSDAY = 4, "Thursday"
-        FRIDAY = 5, "Friday"
-        SATURDAY = 6, "Saturday"
-        SUNDAY = 7, "Sunday"
+        MONDAY = 1, "Понедельник"
+        TUESDAY = 2, "Вторник"
+        WEDNESDAY = 3, "Среда"
+        THURSDAY = 4, "Четверг"
+        FRIDAY = 5, "Пятница"
+        SATURDAY = 6, "Суббота"
+        SUNDAY = 7, "Воскресенье"
 
     master = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -56,6 +60,8 @@ class MasterSchedule(models.Model):
     class Meta:
         ordering = ("master", "day_of_week", "start_time")
         unique_together = ("master", "day_of_week", "start_time", "end_time")
+        verbose_name = "расписание мастера"
+        verbose_name_plural = "расписания мастеров"
 
     def clean(self):
         super().clean()
@@ -68,9 +74,9 @@ class MasterSchedule(models.Model):
 
 class Appointment(models.Model):
     class PaymentStatus(models.TextChoices):
-        UNPAID = "unpaid", "Unpaid"
-        PAID = "paid", "Paid"
-        REFUNDED = "refunded", "Refunded"
+        UNPAID = "unpaid", "Не оплачено"
+        PAID = "paid", "Оплачено"
+        REFUNDED = "refunded", "Возврат"
 
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -96,6 +102,8 @@ class Appointment(models.Model):
 
     class Meta:
         ordering = ("start_datetime",)
+        verbose_name = "запись"
+        verbose_name_plural = "записи"
 
     def clean(self):
         super().clean()
@@ -138,6 +146,8 @@ class Transaction(models.Model):
 
     class Meta:
         ordering = ("-payment_datetime",)
+        verbose_name = "транзакция"
+        verbose_name_plural = "транзакции"
 
     def __str__(self) -> str:
         return f"{self.appointment_id} - {self.amount}"
@@ -153,6 +163,8 @@ class Aidata(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "AI-данные"
+        verbose_name_plural = "AI-данные"
 
     def __str__(self) -> str:
         return f"AI data for appointment {self.appointment_id}"
@@ -174,6 +186,8 @@ class AuditLog(models.Model):
 
     class Meta:
         ordering = ("-action_datetime",)
+        verbose_name = "журнал действий"
+        verbose_name_plural = "журнал действий"
 
     def __str__(self) -> str:
         return f"{self.action_type} {self.action_object}"
