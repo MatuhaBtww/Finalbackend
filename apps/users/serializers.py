@@ -93,3 +93,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "role": self.user.role.role_name if self.user.role else "",
         }
         return data
+
+
+class EmptySerializer(serializers.Serializer):
+    pass

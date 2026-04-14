@@ -17,10 +17,16 @@ This repository contains a Django backend for the course project "Hair salon onl
 ## Run locally
 
 ```powershell
-cmd /c "for %I in (.) do @echo %~sI"
-$env:SQLITE_NAME = "SHORT_PATH_FROM_COMMAND\\db.sqlite3"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+$env:POSTGRES_DB = "hair_salon_db"
+$env:POSTGRES_USER = "postgres"
+$env:POSTGRES_PASSWORD = "postgres"
+$env:POSTGRES_HOST = "127.0.0.1"
+$env:POSTGRES_PORT = "5432"
 .\.venv\bin\python.exe manage.py migrate
-.\\.venv\\bin\\python.exe manage.py seed_demo_data
+.\.venv\bin\python.exe manage.py seed_demo_data
 .\.venv\bin\python.exe manage.py createsuperuser
 .\.venv\bin\python.exe manage.py runserver
 ```
@@ -48,12 +54,15 @@ $env:SQLITE_NAME = "SHORT_PATH_FROM_COMMAND\\db.sqlite3"
 - `/api/appointments/{id}/predict-no-show/`
 - `/api/transactions/`
 - `/api/ai-data/`
+- `/api/ai/train/`
+- `/api/ai/model-info/`
 - `/api/audit-logs/`
 
 ## Notes
 
-- SQLite is used as the default development database.
-- If SQLite raises a disk I/O error inside OneDrive, set `SQLITE_NAME` to a short ASCII path for the database file.
+- PostgreSQL is used as the main database for the project.
+- Database connection settings are taken from `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, and `POSTGRES_PORT`.
+- Before running Django, make sure the PostgreSQL server is installed, started, and the target database already exists.
 - The schema now follows the ER diagram more closely, with dedicated entities for roles, statuses, transactions, and AI data.
-- AI endpoint stores prediction results in `Aidata` using a built-in heuristic scorer for no-show probability.
+- AI endpoint stores prediction results in `Aidata` using a trained MLP-style neural network, with a heuristic fallback until the model is trained.
 - Swagger-style docs page loads the OpenAPI schema from `/api/schema/`.

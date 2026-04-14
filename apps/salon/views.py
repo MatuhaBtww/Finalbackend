@@ -1,10 +1,10 @@
-from decimal import Decimal
-
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.salon.ml import get_model_info
 from apps.salon.models import Aidata, Appointment, AuditLog, MasterSchedule, Service, Status, Transaction
 from apps.salon.permissions import (
     AidataPermission,
@@ -18,28 +18,24 @@ from apps.salon.serializers import (
     AppointmentSerializer,
     AuditLogSerializer,
     MasterScheduleSerializer,
+    NoShowModelInfoSerializer,
     NoShowPredictionRequestSerializer,
     NoShowPredictionResponseSerializer,
     ServiceSerializer,
     StatusSerializer,
     TransactionSerializer,
 )
+from apps.salon.services import upsert_ai_data_for_appointment
 from apps.users.permissions import get_role_name
 
 
-def _clamp(value: float, lower: float = 0.0, upper: float = 100.0) -> float:
-    return max(lower, min(upper, value))
+class NoShowModelInfoView(GenericAPIView):
+    serializer_class = NoShowModelInfoSerializer
+    permission_classes = [IsAuthenticated]
 
-
-def _calculate_no_show_probability(features: dict) -> Decimal:
-    probability = 15.0
-    probability += float(features.get("late_cancellations", 0)) * 12.0
-    probability += float(features.get("no_shows", 0)) * 20.0
-    probability -= min(float(features.get("previous_visits", 0)) * 1.5, 15.0)
-    probability += min(float(features.get("days_until_appointment", 0)) * 0.8, 12.0)
-    probability -= 10.0 if bool(features.get("prepaid", False)) else 0.0
-    probability -= min(float(features.get("loyalty_score", 0)) * 2.0, 10.0)
-    return Decimal(f"{_clamp(probability):.2f}")
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(get_model_info())
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ServiceViewSet(viewsets.ModelViewSet):
@@ -167,20 +163,21 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = NoShowPredictionRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        input_features = serializer.validated_data["input_features"]
+        input_features = serializer.validated_data.get("input_features")
         target_value = serializer.validated_data.get("target_value")
-        model_version = serializer.validated_data["model_version"]
-        probability = _calculate_no_show_probability(input_features)
+        requested_model_version = serializer.validated_data.get("model_version")
 
-        ai_data, _ = Aidata.objects.update_or_create(
-            appointment=appointment,
-            defaults={
-                "input_features": input_features,
-                "target_value": target_value,
-                "prediction_probability": probability,
-                "model_version": model_version,
-            },
+        ai_data = upsert_ai_data_for_appointment(
+            appointment,
+            feature_overrides=input_features,
+            target_value=target_value,
+            requested_model_version=requested_model_version,
         )
+        if ai_data is None:
+            return Response(
+                {"detail": "Для расчета аналитики у записи должны быть указаны клиент, мастер, услуга и время начала."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         actor = request.user if request.user.is_authenticated else None
         AuditLog.objects.create(
@@ -198,6 +195,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             {
                 "appointment_id": appointment.id,
                 "prediction_probability": f"{ai_data.prediction_probability}%",
+                "admin_recommendation": ai_data.admin_recommendation,
+                "master_risk_color": ai_data.master_risk_color,
+                "inference_time_ms": ai_data.inference_time_ms,
                 "model_version": ai_data.model_version,
                 "input_features": ai_data.input_features,
                 "target_value": ai_data.target_value,

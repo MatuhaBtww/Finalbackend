@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from apps.salon.views import (
@@ -5,6 +6,7 @@ from apps.salon.views import (
     AppointmentViewSet,
     AuditLogViewSet,
     MasterScheduleViewSet,
+    NoShowModelInfoView,
     ServiceViewSet,
     StatusViewSet,
     TransactionViewSet,
@@ -19,4 +21,6 @@ router.register("transactions", TransactionViewSet, basename="transaction")
 router.register("ai-data", AidataViewSet, basename="ai-data")
 router.register("audit-logs", AuditLogViewSet, basename="audit-log")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("ai/model-info/", NoShowModelInfoView.as_view(), name="ai-model-info"),
+] + router.urls

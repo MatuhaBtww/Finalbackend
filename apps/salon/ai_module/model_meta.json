@@ -1,0 +1,22 @@
+﻿{
+  "model_path": "apps/salon/ai_module/no_show_model.cbm",
+  "model_version": "catboost-no-show-v1",
+  "validation_accuracy": 0.7625,
+  "n_samples": 8000,
+  "cat_features": [
+    "weekday",
+    "payment_status",
+    "master_id"
+  ],
+  "feature_columns": [
+    "weekday",
+    "hour",
+    "client_cancel_count_90d",
+    "client_no_show_count_90d",
+    "lead_time_days",
+    "payment_status",
+    "master_appointments_same_day",
+    "master_id"
+  ],
+  "positive_class_is_no_show": true
+}

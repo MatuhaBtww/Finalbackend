@@ -9,6 +9,7 @@ from apps.users.permissions import IsAdminOrSelf, IsAuthenticatedReadOnlyOrAdmin
 from apps.users.serializers import (
     AccessRightSerializer,
     CustomTokenObtainPairSerializer,
+    EmptySerializer,
     RegisterSerializer,
     RoleSerializer,
     UserSerializer,
@@ -71,6 +72,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class LogoutView(generics.GenericAPIView):
+    serializer_class = EmptySerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):

@@ -4,8 +4,8 @@ from django.utils import timezone
 
 
 class Role(models.Model):
-    role_name = models.CharField(max_length=100, unique=True)
-    role_description = models.TextField(blank=True)
+    role_name = models.CharField("Название роли", max_length=100, unique=True)
+    role_description = models.TextField("Описание роли", blank=True)
 
     class Meta:
         ordering = ("role_name",)
@@ -17,10 +17,15 @@ class Role(models.Model):
 
 
 class AccessRight(models.Model):
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="access_rights")
-    operation_name = models.CharField(max_length=150)
-    access_object = models.CharField(max_length=150)
-    permission = models.CharField(max_length=100)
+    role = models.ForeignKey(
+        Role,
+        on_delete=models.CASCADE,
+        related_name="access_rights",
+        verbose_name="Роль",
+    )
+    operation_name = models.CharField("Название операции", max_length=150)
+    access_object = models.CharField("Объект доступа", max_length=150)
+    permission = models.CharField("Разрешение", max_length=100)
 
     class Meta:
         ordering = ("role__role_name", "operation_name")
@@ -43,15 +48,17 @@ class User(AbstractUser):
         related_name="users",
         null=True,
         blank=True,
+        verbose_name="Роль",
     )
-    full_name = models.CharField(max_length=255, default="")
-    email = models.EmailField(unique=True)
+    full_name = models.CharField("Полное имя", max_length=255, default="")
+    email = models.EmailField("Электронная почта", unique=True)
     account_status = models.CharField(
+        "Статус учетной записи",
         max_length=20,
         choices=AccountStatus.choices,
         default=AccountStatus.ACTIVE,
     )
-    registration_date = models.DateTimeField(default=timezone.now)
+    registration_date = models.DateTimeField("Дата регистрации", default=timezone.now)
 
     REQUIRED_FIELDS = ["email", "full_name"]
 

@@ -40,7 +40,8 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(Aidata)
 class AidataAdmin(admin.ModelAdmin):
-    list_display = ("appointment", "prediction_probability", "model_version", "created_at")
+    list_display = ("appointment", "prediction_probability", "master_risk_color", "model_version", "created_at")
+    list_filter = ("master_risk_color", "model_version")
     search_fields = ("model_version",)
 
 

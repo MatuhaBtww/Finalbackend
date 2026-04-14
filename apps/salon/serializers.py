@@ -80,6 +80,9 @@ class AidataSerializer(serializers.ModelSerializer):
             "input_features",
             "target_value",
             "prediction_probability",
+            "admin_recommendation",
+            "master_risk_color",
+            "inference_time_ms",
             "model_version",
             "created_at",
         )
@@ -104,14 +107,28 @@ class AuditLogSerializer(serializers.ModelSerializer):
 
 
 class NoShowPredictionRequestSerializer(serializers.Serializer):
-    input_features = serializers.JSONField()
+    input_features = serializers.JSONField(required=False)
     target_value = serializers.IntegerField(required=False, allow_null=True)
-    model_version = serializers.CharField(required=False, default="heuristic-v1")
+    model_version = serializers.CharField(required=False, allow_blank=True)
 
 
 class NoShowPredictionResponseSerializer(serializers.Serializer):
     appointment_id = serializers.IntegerField()
     prediction_probability = serializers.CharField()
+    admin_recommendation = serializers.CharField()
+    master_risk_color = serializers.CharField()
+    inference_time_ms = serializers.DecimalField(max_digits=8, decimal_places=2, required=False, allow_null=True)
     model_version = serializers.CharField()
     input_features = serializers.JSONField()
     target_value = serializers.IntegerField(required=False, allow_null=True)
+
+class NoShowModelInfoSerializer(serializers.Serializer):
+    is_trained = serializers.BooleanField()
+    model_type = serializers.CharField()
+    model_version = serializers.CharField(required=False, allow_blank=True)
+    trained_at = serializers.CharField(required=False, allow_blank=True)
+    feature_names = serializers.ListField(child=serializers.CharField())
+    cat_features = serializers.ListField(child=serializers.CharField(), required=False)
+    validation_accuracy = serializers.FloatField(required=False)
+    n_samples = serializers.IntegerField(required=False)
+    positive_class_is_no_show = serializers.BooleanField(required=False)

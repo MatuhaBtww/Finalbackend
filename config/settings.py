@@ -3,6 +3,13 @@ from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+POSTGRES_BIN_DIR = Path(os.getenv("POSTGRES_BIN_DIR", r"C:\Program Files\PostgreSQL\18\bin"))
+
+if POSTGRES_BIN_DIR.exists():
+    os.environ["PATH"] = f"{POSTGRES_BIN_DIR}{os.pathsep}{os.environ.get('PATH', '')}"
+    add_dll_directory = getattr(os, "add_dll_directory", None)
+    if callable(add_dll_directory):
+        add_dll_directory(str(POSTGRES_BIN_DIR))
 
 SECRET_KEY = "django-insecure-dev-key-for-course-project"
 DEBUG = True
@@ -51,12 +58,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-SQLITE_NAME = os.getenv("SQLITE_NAME", str(BASE_DIR / "db.sqlite3"))
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": SQLITE_NAME,
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "hair_salon_db"),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
+        "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 

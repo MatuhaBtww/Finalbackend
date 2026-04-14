@@ -81,6 +81,7 @@ class Command(BaseCommand):
             ("confirmed", "Confirmed", "booking", "green"),
             ("completed", "Completed", "booking", "blue"),
             ("cancelled", "Cancelled", "booking", "red"),
+            ("no_show", "No show", "booking", "orange"),
         ]
         created_statuses = {}
         for code, name, group, color in statuses:
@@ -122,6 +123,28 @@ class Command(BaseCommand):
                 "payment_status": Appointment.PaymentStatus.UNPAID,
             },
         )
+
+        historical_appointments = [
+            (30, "completed", Appointment.PaymentStatus.PAID),
+            (24, "completed", Appointment.PaymentStatus.PAID),
+            (18, "cancelled", Appointment.PaymentStatus.UNPAID),
+            (12, "no_show", Appointment.PaymentStatus.UNPAID),
+            (8, "completed", Appointment.PaymentStatus.PAID),
+            (4, "completed", Appointment.PaymentStatus.PAID),
+        ]
+        for days_ago, status_code, payment_status in historical_appointments:
+            start_dt = timezone.now() - timedelta(days=days_ago)
+            Appointment.objects.get_or_create(
+                client=client_user,
+                master=master_user,
+                service=service,
+                start_datetime=start_dt,
+                defaults={
+                    "status": created_statuses[status_code],
+                    "comment": f"Historical demo appointment: {status_code}",
+                    "payment_status": payment_status,
+                },
+            )
 
         transaction, _ = Transaction.objects.get_or_create(
             appointment=appointment,
